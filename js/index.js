@@ -510,4 +510,24 @@ $(document).ready(function() {
       }
     }
   });
+
+  $('#startChessPlan').on('click', function() {
+    $('.chess-board').html('');
+    for (color in chess.pieceInitPositionRules) {
+      var diffPiece = chess.pieceInitPositionRules[color];
+      for (kind in diffPiece) {
+        for (var i = 0; i < diffPiece[kind]['left'].length; i++) {
+          var _src = 'image/' + color + '/normal/' + kind + '.png';
+          var _html = '<div class="piece"><img src="' + _src + '" /></div>';
+          var html = $(_html);
+          html.data('role', kind);
+          html.data('color', color);
+          html.data('transverse', diffPiece[kind]['left'][i] + 1);
+          html.data('portrait', diffPiece[kind]['top'] + 1);
+          var _target = '.' + color + '-box';
+          $(_target).append(html);
+        }
+      }
+    }
+  });
 });
