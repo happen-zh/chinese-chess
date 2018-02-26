@@ -10,7 +10,7 @@ $(document).ready(function() {
     maxTransverse: 9, //横向
     maxPortrait: 10, //纵向
     currentRole: 'red',
-    targetPiece: null,
+    isOver: false,
     pieceInitPositionRules: {
       black: {
         ju: {
@@ -96,7 +96,6 @@ $(document).ready(function() {
         }
       }
     },
-    // 计算棋子应该所在位置
     CalculationPosition: function(left, top) {
       var that = this;
       var _left = left - that.startLeft;
@@ -109,22 +108,25 @@ $(document).ready(function() {
       }
       return _position;
     },
-    // 条件符合，棋子跳动
     runPiece: function(_position) {
+      var that = this;
       var _selectedPiece = chess.selectedPiece;
       $(_selectedPiece).css('left', chess.startLeft + (_position.transverse - 1) * chess.chessSpan);
       $(_selectedPiece).css('top', chess.startTop + (_position.portrait - 1) * chess.chessSpan);
-      if (chess.targetPiece) {
-        var _target = chess.targetPiece;
-        var target = $(_target);
-        var _color = target.data('color');
+      var _targetTemp = that.getSpecicalPoitPiece(_position);
+      if (_targetTemp) {
+        var _target = $(_targetTemp);
+        var _color = _target.data('color');
         var _name = '.' + _color + '-box';
-        $(_name).append(chess.targetPiece);
+        $(_name).append(_targetTemp);
+        if (_target.data('role') === 'jiang' || _target.data('role') === 'shuai') {
+          alert('棋局结束,');
+          chess.isOver = true;
+        }
       }
       $(_selectedPiece).data('transverse', _position.transverse);
       $(_selectedPiece).data('portrait', _position.portrait);
       chess.selectedPiece = null;
-      chess.targetPiece = null;
       if (chess.currentRole === 'red') {
         chess.currentRole = 'black';
       } else {
@@ -135,7 +137,14 @@ $(document).ready(function() {
       var that = this;
       var _role = $(chess.selectedPiece).data('role');
       var _selectedPiece = $(that.selectedPiece);
+      var _transverseDvalue = _position.transverse - _selectedPiece.data('transverse');
+      var _portraitDvalue = _position.portrait - _selectedPiece.data('portrait');
       var _num = 0;
+      if(that.isOver){
+        console.log('棋局已经结束，请点击开始再次开始！');
+        return;
+      }
+
       switch (_role) {
         case 'ju':
           {
@@ -157,42 +166,220 @@ $(document).ready(function() {
           }
         case 'ma':
           {
-            console.log('你只能走日字形！')
+            // 横纵坐标差值为1和2
+            var _specailPoint = null;
+            if (Math.abs(_transverseDvalue) === 2 && Math.abs(_portraitDvalue) === 1) {
+              // 横向跳
+              if (_transverseDvalue < 0) {
+                // 向右
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') - 1,
+                  portrait: _selectedPiece.data('portrait')
+                };
+              } else {
+                // 向左
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') + 1,
+                  portrait: _selectedPiece.data('portrait')
+                };
+              }
+            } else if (Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 2) {
+              // 纵向跳
+              if (_portraitDvalue < 0) {
+                // 向上跳
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse'),
+                  portrait: _selectedPiece.data('portrait') - 1
+                };
+              } else {
+                // 向下跳
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse'),
+                  portrait: _selectedPiece.data('portrait') + 1
+                };
+              }
+            } else {
+              console.log('你只能走日字形！');
+              return;
+            }
+            var _obstacle = that.getSpecicalPoitPiece(_specailPoint);
+            if (_obstacle) {
+              console.log('马被别，不能走！');
+              return;
+            }
             break;
           }
         case 'xiang':
           {
-            console.log('你只能走田字形，不能过河，不能别别着！')
+            var _specailPoint = null;
+            if (Math.abs(_transverseDvalue) === 2 && Math.abs(_portraitDvalue) === 2) {
+              if (_transverseDvalue < 0 && _portraitDvalue < 0) {
+                // 向右下
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') - 1,
+                  portrait: _selectedPiece.data('portrait') - 1
+                };
+              } else if (_transverseDvalue > 0 && _portraitDvalue > 0) {
+                // 向左上
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') + 1,
+                  portrait: _selectedPiece.data('portrait') + 1
+                };
+              } else if (_transverseDvalue > 0 && _portraitDvalue < 0) {
+                // 向左下
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') + 1,
+                  portrait: _selectedPiece.data('portrait') - 1
+                };
+              } else if (_transverseDvalue < 0 && _portraitDvalue > 0) {
+                // 向右上
+                _specailPoint = {
+                  transverse: _selectedPiece.data('transverse') - 1,
+                  portrait: _selectedPiece.data('portrait') + 1
+                };
+              }
+            } else {
+              console.log('你只能走田字形，不能过河，不能被别着！');
+              return;
+            }
+
+            var _obstacle = that.getSpecicalPoitPiece(_specailPoint);
+            if (_obstacle) {
+              console.log('象被别，不能走！');
+              return;
+            }
+
+            if (_selectedPiece.data('color') === 'black' && _position.portrait > 5) {
+              console.log('象不能过河！');
+              return;
+            }
+
+            if (_selectedPiece.data('color') === 'red' && _position.portrait < 5) {
+              console.log('象不能过河！');
+              return;
+            }
+
             break;
           }
         case 'shi':
           {
-            console.log('你只能走在田子格里边，只能斜着走不能直着走！')
+            if (_selectedPiece.data('color') === 'black') {
+              if (_position.transverse < 4 || _position.transverse > 6 || _position.portrait > 3 || _position.portrait < 1) {
+                console.log('士只能在米子格内走！');
+                return;
+              }
+            } else {
+              if (_position.transverse < 4 || _position.transverse > 6 || _position.portrait > 10 || _position.portrait < 8) {
+                console.log('士只能在米子格内走！');
+                return;
+              }
+            }
+            if (Math.abs(_transverseDvalue) !== 1 || Math.abs(_portraitDvalue) !== 1) {
+              console.log('士只能斜着走！');
+              return;
+            }
             break;
           }
         case 'jiang':
           {
-            console.log('你只能一步步直着走，不能出米字格！')
+            if (_position.transverse < 4 || _position.transverse > 6 || _position.portrait > 3 || _position.portrait < 1) {
+              console.log('将只能在米子格内走！');
+              return;
+            }
+            if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+              console.log('将不能跨步走！');
+              return;
+            }
             break;
           }
         case 'shuai':
           {
-            console.log('你只能一步步直着走，不能出米字格！')
+            if (_position.transverse < 4 || _position.transverse > 6 || _position.portrait > 10 || _position.portrait < 8) {
+              console.log('帅只能在米子格内走！');
+              return;
+            }
+            if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+              console.log('帅不能跨步走！');
+              return;
+            }
+            console.log('你只能一步步直着走，不能出米字格！');
             break;
           }
         case 'pao':
           {
-            console.log('你不吃子时只能直着走，吃子必须隔层山！')
-            break;
-          }
-        case 'bing':
-          {
-            console.log('你只能往前，不能往后，不过河只能前进不能左右移，过河之后可以左右移！')
+            // 不能拐弯
+            if (_selectedPiece.data('portrait') !== _position.portrait && _selectedPiece.data('transverse') !== _position.transverse) {
+              console.log('炮只能直着走，不能拐弯！');
+              return;
+            }
+
+            // 不能跨子
+            _num = that.checkMiddlePiece(_position, _selectedPiece);
+            var _target = that.getSpecicalPoitPiece(_position);
+
+            if (_target) {
+              if (_num !== 1) {
+                console.log('炮吃子时，中间必须只有一个子！');
+                return;
+              }
+            } else {
+              if (_num > 0) {
+                console.log('炮不吃子时，中间不能有子！');
+                return;
+              }
+            }
             break;
           }
         case 'zu':
           {
-            console.log('你只能往前，不能往后，不过河只能前进不能左右移，过河之后可以左右移！')
+            if (Math.abs(_portraitDvalue) > 1) {
+              console.log('卒只能往前走一步！');
+              return;
+            }
+
+            if (_position.portrait < 6) {
+              if (_transverseDvalue !== 0 || _portraitDvalue !== 1) {
+                // 只能往前一步
+                console.log('卒过河前，只能往前走！');
+                return;
+              }
+            } else {
+              if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+                if (_portraitDvalue === -1) {
+                  console.log('卒过河后，但不能后退！');
+                  return;
+                }
+              } else {
+                console.log('卒一次只能走一步！');
+                return;
+              }
+            }
+            break;
+          }
+        case 'bing':
+          {
+            if (Math.abs(_portraitDvalue) > 1) {
+              console.log('兵只能往前走一步！');
+              return;
+            }
+
+            if (_position.portrait > 5) {
+              if (_transverseDvalue !== 0 || _portraitDvalue !== -1) {
+                // 只能往前一步
+                console.log('兵过河前，只能往前走！');
+                return;
+              }
+            } else {
+              if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+                if (_portraitDvalue === 1) {
+                  console.log('兵过河后，但不能后退！');
+                  return;
+                }
+              } else {
+                console.log('兵一次只能走一步！');
+                return;
+              }
+            }
             break;
           }
       }
@@ -229,6 +416,17 @@ $(document).ready(function() {
       });
 
       return _num;
+    },
+    getSpecicalPoitPiece: function(_position) {
+      var _result = null;
+      $('.chess-board .piece').each(function() {
+        var _this = $(this);
+        if (_this.data('transverse') === _position.transverse && _this.data('portrait') === _position.portrait) {
+          _result = _this;
+          return _this;
+        }
+      });
+      return _result;
     }
   };
 
@@ -271,11 +469,14 @@ $(document).ready(function() {
         transverse: _transverse,
         portrait: _portrait
       }
-      chess.targetPiece = that;
-      chess.checkRunRules(_position);
+
+      if ((_position.transverse < 0 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
+        console.log('不能选择棋盘外的位置！');
+      } else {
+        chess.checkRunRules(_position);
+      }
       e.stopPropagation();
     }
-
   });
 
   $('.chess-board').on('click', function(e) {
@@ -285,8 +486,11 @@ $(document).ready(function() {
       var _offsetX = e.offsetX;
       var _offsetY = e.offsetY;
       var _position = chess.CalculationPosition(_offsetX, _offsetY);
-
-      chess.checkRunRules(_position);
+      if ((_position.transverse < 1 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
+        console.log('不能选择棋盘外的位置！');
+      } else {
+        chess.checkRunRules(_position);
+      }
     }
   });
 });

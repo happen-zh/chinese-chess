@@ -36,6 +36,8 @@
 
 .red-box .piece{
   float: left;
+  width: 55px;
+  height: 55px;
 }
 
 .black-box {
@@ -48,4 +50,6 @@
 
 .black-box .piece{
   float: left;
+  width: 55px;
+  height: 55px;
 }
