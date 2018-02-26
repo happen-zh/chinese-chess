@@ -1,0 +1,51 @@
+.chess-board {
+  width: 609px;
+  height: 674px;
+  margin: 100px auto;
+  border: 1px solid #ccc;
+  position: relative;
+  background: #000 url(../image/pan.png) no-repeat;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.chess-board .piece {
+  width: 55px;
+  height: 55px;
+  border-radius: 27px;
+  position: absolute;
+  cursor: pointer;
+}
+
+.chess-board .piece img {
+  width: 55px;
+  height: 55px;
+  border-radius: 27px;
+}
+
+.red-box {
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  top: 0;
+  left: 0;
+  line-height: 55px;
+}
+
+.red-box .piece{
+  float: left;
+}
+
+.black-box {
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  bottom: 0;
+  right: 0;
+}
+
+.black-box .piece{
+  float: left;
+}
