@@ -126,6 +126,11 @@ $(document).ready(function() {
       }
       $(_selectedPiece).data('transverse', _position.transverse);
       $(_selectedPiece).data('portrait', _position.portrait);
+      var _selected = chess.selectedPiece;
+      if (_selected) {
+        $(_selected).find('img').eq(0).attr('src', 'image/' + $(_selected).data('color') + '/normal/' + $(_selected).data('role') + '.png');
+        chess.selectedPiece = null;
+      }
       chess.selectedPiece = null;
       if (chess.currentRole === 'red') {
         chess.currentRole = 'black';
@@ -140,7 +145,7 @@ $(document).ready(function() {
       var _transverseDvalue = _position.transverse - _selectedPiece.data('transverse');
       var _portraitDvalue = _position.portrait - _selectedPiece.data('portrait');
       var _num = 0;
-      if(that.isOver){
+      if (that.isOver) {
         console.log('棋局已经结束，请点击开始再次开始！');
         return;
       }
@@ -286,7 +291,7 @@ $(document).ready(function() {
               console.log('将只能在米子格内走！');
               return;
             }
-            if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+            if (!((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1))) {
               console.log('将不能跨步走！');
               return;
             }
@@ -298,11 +303,10 @@ $(document).ready(function() {
               console.log('帅只能在米子格内走！');
               return;
             }
-            if ((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1)) {
+            if (!((Math.abs(_transverseDvalue) === 1 && Math.abs(_portraitDvalue) === 0) || (Math.abs(_transverseDvalue) === 0 && Math.abs(_portraitDvalue) === 1))) {
               console.log('帅不能跨步走！');
               return;
             }
-            console.log('你只能一步步直着走，不能出米字格！');
             break;
           }
         case 'pao':
@@ -432,6 +436,9 @@ $(document).ready(function() {
 
   $('#start').on('click', function() {
     $('.chess-board').html('');
+    $('.red-box').html('');
+    $('.black-box').html('');
+    chess.isOver = false;
     chess.initPiece();
   });
 
@@ -457,6 +464,7 @@ $(document).ready(function() {
         return;
       }
       chess.selectedPiece = that;
+      $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/active/' + $(that).data('role') + '.png');
       e.stopPropagation();
     } else {
       // 是否吃子是自己的
@@ -477,6 +485,15 @@ $(document).ready(function() {
       }
       e.stopPropagation();
     }
+  });
+
+  $("body").on("contextmenu", function() {
+    var that = chess.selectedPiece;
+    if (that) {
+      $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/normal/' + $(that).data('role') + '.png');
+      chess.selectedPiece = null;
+    }
+    return false;
   });
 
   $('.chess-board').on('click', function(e) {
