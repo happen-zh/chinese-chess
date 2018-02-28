@@ -11,6 +11,7 @@ $(document).ready(function() {
     maxPortrait: 10, //纵向
     currentRole: 'red',
     isOver: false,
+    isStartChessPlan: false,
     pieceInitPositionRules: {
       black: {
         ju: {
@@ -389,6 +390,192 @@ $(document).ready(function() {
       }
       chess.runPiece(_position);
     },
+    checkChessPlan: function(_position) {
+      if ((_position.transverse < 1 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
+        console.log('不能选择棋盘外的位置！');
+        return;
+      }
+      var that = this;
+      var _role = $(chess.selectedPiece).data('role');
+      var _color = $(chess.selectedPiece).data('color');
+      var _selectedPiece = $(that.selectedPiece);
+      switch (_role) {
+        case 'xiang':
+          {
+            if (_color === 'red') {
+              var _redPortraitRules = [6, 8, 10];
+              var _redTransverseRules = [
+                [3, 7],
+                [1, 5, 9],
+                [3, 7]
+              ];
+              var _isAllow = that.positionRangeCheck(_position, _redPortraitRules, _redTransverseRules);
+              if (!_isAllow) {
+                console.log('相只能放置在固定的位置！');
+                return;
+              }
+            } else {
+              var _blackPortraitRules = [1, 3, 5];
+              var _blackTransverseRules = [
+                [3, 7],
+                [1, 5, 9],
+                [3, 7]
+              ];
+              var _isAllow = that.positionRangeCheck(_position, _blackPortraitRules, _blackTransverseRules);
+              if (!_isAllow) {
+                console.log('象只能放置在固定的位置！');
+                return;
+              }
+            }
+            break;
+          }
+        case 'shi':
+          {
+            if (_color === 'red') {
+              var _redPortraitRules = [8, 9, 10];
+              var _redTransverseRules = [
+                [4, 6],
+                [5],
+                [4, 6]
+              ];
+
+              var _isAllow = that.positionRangeCheck(_position, _redPortraitRules, _redTransverseRules);
+              if (!_isAllow) {
+                console.log('仕只能放置在固定的位置！');
+                return;
+              }
+            } else {
+              var _blackPortraitRules = [1, 2, 3];
+              var _blackTransverseRules = [
+                [4, 6],
+                [5],
+                [4, 6]
+              ];
+              var _isAllow = that.positionRangeCheck(_position, _blackPortraitRules, _blackTransverseRules);
+              if (!_isAllow) {
+                console.log('士只能放置在固定的位置！');
+                return;
+              }
+            }
+            break;
+          }
+        case 'jiang':
+          {
+            var _portraitRules = [1, 2, 3];
+            var _transverseRules = [
+              [4, 5, 6],
+              [4, 5, 6],
+              [4, 5, 6]
+            ];
+            var _isAllow = that.positionRangeCheck(_position, _portraitRules, _transverseRules);
+            if (!_isAllow) {
+              console.log('将只能放置在固定的位置！');
+              return;
+            }
+            break;
+          }
+        case 'shuai':
+          {
+            var _portraitRules = [8, 9, 10];
+            var _transverseRules = [
+              [4, 5, 6],
+              [4, 5, 6],
+              [4, 5, 6]
+            ];
+            var _isAllow = that.positionRangeCheck(_position, _portraitRules, _transverseRules);
+            if (!_isAllow) {
+              console.log('帅只能放置在固定的位置！');
+              return;
+            }
+            break;
+          }
+        case 'zu':
+          {
+            var _transverseRules = [1, 3, 5, 7, 9];
+            if (_position.portrait < 4) {
+              console.log('卒未过河，只能在特定的位置！');
+              return;
+            }
+            if ($.inArray(_position.transverse, _transverseRules) < 0 && 　_position.portrait < 6) {
+              console.log('卒未过河，只能在特定的位置！');
+              return;
+            }
+            var _isHas = false;
+            if (_position.portrait < 6) {
+              $('.chess-board>.piece').each(function() {
+                var _this = $(this);
+                if (_this.data('role') === 'zu' && _this.data('transverse') === _position.transverse) {
+                  if (_this.find('img').eq(0).attr('src').indexOf('normal') > -1) {
+                    _isHas = true;
+                    console.log('该列已存在卒，不允许设置多个!');
+                    return;
+                  }
+                }
+              });
+            }
+            if (_isHas) {
+              return;
+            }
+            break;
+          }
+        case 'bing':
+          {
+            var _transverseRules = [1, 3, 5, 7, 9];
+            if (_position.portrait > 7) {
+              console.log('兵未过河，只能在特定的位置！');
+              return;
+            }
+            if ($.inArray(_position.transverse, _transverseRules) < 0 && 　_position.portrait > 5) {
+              console.log('兵未过河，只能在特定的位置！');
+              return;
+            }
+            var _isHas = false;
+            if (_position.portrait > 5) {
+              $('.chess-board>.piece').each(function() {
+                var _this = $(this);
+                if (_this.data('role') === 'zu' && _this.data('transverse') === _position.transverse) {
+                  if (_this.find('img').eq(0).attr('src').indexOf('normal') > -1) {
+                    _isHas = true;
+                    console.log('该列已存在兵，不允许设置多个!');
+                    return;
+                  }
+                }
+              });
+            }
+            if (_isHas) {
+              return;
+            }
+            break;
+          }
+      }
+      that.putPiece(_position);
+    },
+    positionRangeCheck: function(_position, _portraitRules, _transverseRules) {
+      var _portraitIndex = $.inArray(_position.portrait, _portraitRules);
+      if (_portraitIndex < 0) {
+        return false;
+      }
+      var _transverseIndex = $.inArray(_position.transverse, _transverseRules[_portraitIndex]);
+      if (_transverseIndex < 0) {
+        return false;
+      }
+      return true;
+    },
+    putPiece: function(_position) {
+      var that = this;
+      var _selectedPiece = chess.selectedPiece;
+      var _targetTemp = that.getSpecicalPoitPiece(_position);
+      $(_selectedPiece).css('left', chess.startLeft + (_position.transverse - 1) * chess.chessSpan);
+      $(_selectedPiece).css('top', chess.startTop + (_position.portrait - 1) * chess.chessSpan);
+      $(_selectedPiece).data('transverse', _position.transverse);
+      $(_selectedPiece).data('portrait', _position.portrait);
+      if (!$(_selectedPiece).parent().hasClass('chess-board')) {
+        $('.chess-board').append(_selectedPiece);
+      } else {
+        $(_selectedPiece).find('img').eq(0).attr('src', 'image/' + $(_selectedPiece).data('color') + '/normal/' + $(_selectedPiece).data('role') + '.png');
+      }
+      chess.selectedPiece = null;
+    },
     checkMiddlePiece: function(_position, _selectedPiece) {
       var _num = 0;
       var _same = '';
@@ -446,73 +633,90 @@ $(document).ready(function() {
 
   $('.chess-board').delegate('.piece', 'click', function(e) {
     var that = this;
-    var _color = $(that).data('color');
-    var _role = $(that).data('role');
-    var _transverse = $(that).data('transverse');
-    var _portrait = $(that).data('portrait');
-
-    //目标是本身不进行下一步
-    if (chess.selectedPiece === that) {
-      e.stopPropagation();
-      return;
-    }
-
-    if (!chess.selectedPiece) {
-      if (chess.currentRole != _color) {
-        console.log('现在你还不能走棋哦！');
-        e.stopPropagation();
-        return;
-      }
+    if (chess.isStartChessPlan) {
+      $(chess.selectedPiece).find('img').eq(0).attr('src', 'image/' + $(chess.selectedPiece).data('color') + '/normal/' + $(chess.selectedPiece).data('role') + '.png');
       chess.selectedPiece = that;
       $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/active/' + $(that).data('role') + '.png');
       e.stopPropagation();
     } else {
-      // 是否吃子是自己的
-      if (_color === chess.currentRole) {
-        console.log('不能吃自己的棋子！');
+      var _color = $(that).data('color');
+      var _role = $(that).data('role');
+      var _transverse = $(that).data('transverse');
+      var _portrait = $(that).data('portrait');
+
+      //目标是本身不进行下一步
+      if (chess.selectedPiece === that) {
         e.stopPropagation();
         return;
       }
-      var _position = {
-        transverse: _transverse,
-        portrait: _portrait
-      }
 
-      if ((_position.transverse < 0 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
-        console.log('不能选择棋盘外的位置！');
+      if (!chess.selectedPiece) {
+        if (chess.currentRole != _color) {
+          console.log('现在你还不能走棋哦！');
+          e.stopPropagation();
+          return;
+        }
+        chess.selectedPiece = that;
+        $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/active/' + $(that).data('role') + '.png');
+        e.stopPropagation();
       } else {
-        chess.checkRunRules(_position);
-      }
-      e.stopPropagation();
-    }
-  });
+        // 是否吃子是自己的
+        if (_color === chess.currentRole) {
+          console.log('不能吃自己的棋子！');
+          e.stopPropagation();
+          return;
+        }
+        var _position = {
+          transverse: _transverse,
+          portrait: _portrait
+        }
 
-  $("body").on("contextmenu", function() {
-    var that = chess.selectedPiece;
-    if (that) {
-      $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/normal/' + $(that).data('role') + '.png');
-      chess.selectedPiece = null;
+        if ((_position.transverse < 0 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
+          console.log('不能选择棋盘外的位置！');
+        } else {
+          chess.checkRunRules(_position);
+        }
+        e.stopPropagation();
+      }
     }
-    return false;
   });
 
   $('.chess-board').on('click', function(e) {
-    var that = this;
-    var _target = e.target;
-    if (chess.selectedPiece) {
+    var _offsetX = e.offsetX;
+    var _offsetY = e.offsetY;
+    var _position = chess.CalculationPosition(_offsetX, _offsetY);
+    if (!chess.isStartChessPlan) {
+      var that = this;
+      var _target = e.target;
+      if (chess.selectedPiece) {
+        if ((_position.transverse < 1 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
+          console.log('不能选择棋盘外的位置！');
+        } else {
+          chess.checkRunRules(_position);
+        }
+      }
+    } else {
+      // 摆谱
       var _offsetX = e.offsetX;
       var _offsetY = e.offsetY;
       var _position = chess.CalculationPosition(_offsetX, _offsetY);
-      if ((_position.transverse < 1 || _position.transverse > 9) || (_position.portrait < 1 || _position.portrait > 10)) {
-        console.log('不能选择棋盘外的位置！');
-      } else {
-        chess.checkRunRules(_position);
-      }
+      chess.checkChessPlan(_position);
+    }
+  });
+
+  $(document).delegate('[class$="-box"]>.piece', 'click', function() {
+    var _this = this;
+    if (chess.isStartChessPlan) {
+      chess.selectedPiece = _this;
     }
   });
 
   $('#startChessPlan').on('click', function() {
+    $('[name="firstSet"]').removeAttr('disabled');
     $('.chess-board').html('');
+    $('.red-box').html('');
+    $('.black-box').html('');
+    chess.isStartChessPlan = true;
     for (color in chess.pieceInitPositionRules) {
       var diffPiece = chess.pieceInitPositionRules[color];
       for (kind in diffPiece) {
@@ -529,5 +733,31 @@ $(document).ready(function() {
         }
       }
     }
+  });
+
+  $('#endChessPlan').on('click', function() {
+    $('[name="firstSet"]').attr('disabled', 'disabled');
+    chess.currentRole = $('[name="firstSet"]:checked').val();
+    chess.isStartChessPlan = false;
+  });
+
+  // 右键事件
+  $("body").on("contextmenu", function() {
+    var that = chess.selectedPiece;
+    if (chess.isStartChessPlan) {
+      if (that) {
+        $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/normal/' + $(that).data('role') + '.png');
+        var _color = $(that).data('color');
+        var _boxName = '.' + _color + '-box';
+        $(_boxName).append(that);
+        chess.selectedPiece = null;
+      }
+    } else {
+      if (that) {
+        $(that).find('img').eq(0).attr('src', 'image/' + $(that).data('color') + '/normal/' + $(that).data('role') + '.png');
+        chess.selectedPiece = null;
+      }
+    }
+    return false;
   });
 });
